@@ -38,7 +38,7 @@ for ACTION in "${ACTIONS[@]}"; do
             echo "🛠️ Building in $BUILD_TYPE mode..."
             mkdir -p "$BUILD_DIR"
             cd "$BUILD_DIR"
-            cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ../..
+            cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE ../..
             cmake --build .
             cd - > /dev/null
             echo "✅ Build completed"
@@ -55,7 +55,7 @@ for ACTION in "${ACTIONS[@]}"; do
             fi
             echo "🧪 Running tests with ctest in $BUILD_DIR..."
             cd "$BUILD_DIR"
-            ctest
+            ctest --output-on-failure
             cd - > /dev/null
             echo "✅ Tests run completed"
             ;;
