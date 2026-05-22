@@ -30,9 +30,11 @@ function(apply_sanitizers tgt)
       endif()
     endforeach()
     if(_flags)
+      # Join list back to comma-separated string for the compiler flag
+      string(JOIN "," _flags_str ${_flags})
       # add compile+link sanitizer flags
-      target_compile_options(${tgt} PRIVATE -fsanitize=${_flags})
-      target_link_options(${tgt} PRIVATE -fsanitize=${_flags})
+      target_compile_options(${tgt} PRIVATE -fsanitize=${_flags_str})
+      target_link_options(${tgt} PRIVATE -fsanitize=${_flags_str})
       # helpful for nicer stacks
       target_compile_options(${tgt} PRIVATE -fno-omit-frame-pointer)
     endif()

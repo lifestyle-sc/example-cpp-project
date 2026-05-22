@@ -4,6 +4,7 @@ set -e
 # === Default settings ===
 BUILD_TYPE="Debug"
 ACTIONS=("build")
+CMAKE_ARGS=()
 
 # === Parse args ====
 while [[ $# -gt 0 ]]; do
@@ -20,9 +21,25 @@ while [[ $# -gt 0 ]]; do
             IFS=',' read -r -a ACTIONS <<< "${1#--action=}"
             shift
             ;;
+        -D*)
+            # Validate that -D argument has proper format: -DVAR=value or -DVAR:type=value
+            if [[ ! "$1" =~ ^-D[A-Za-z_][A-Za-z0-9_]*([=:]|$) ]]; then
+                echo "❌ Invalid CMake variable format: $1"
+                echo "   Expected: -DVAR=value or -DVAR:type=value"
+                echo "   Example: -DSANITIZERS=address,undefined,leak"
+                exit 1
+            fi
+            CMAKE_ARGS+=("$1")
+            shift
+            ;;
         *)
             echo "❌ Unknown option: $1"
-            echo "Usage: $0 [--debug|--release] [--action=clean,build,ctest]"
+            echo "Usage: $0 [--debug|--release] [--action=clean,build,ctest] [-DVAR=value ...]"
+            echo ""
+            echo "Examples:"
+            echo "  $0 --debug --action=build,ctest"
+            echo "  $0 --release --action=build -DSANITIZERS=address,undefined,leak"
+            echo "  $0 --debug --action=build -DENABLE_PROFILING=ON"
             exit 1
             ;;
     esac
@@ -38,7 +55,7 @@ for ACTION in "${ACTIONS[@]}"; do
             echo "🛠️ Building in $BUILD_TYPE mode..."
             mkdir -p "$BUILD_DIR"
             cd "$BUILD_DIR"
-            cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE ../..
+            cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${CMAKE_ARGS[@]}" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE ../..
             cmake --build .
             cd - > /dev/null
             echo "✅ Build completed"
